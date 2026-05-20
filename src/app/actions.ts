@@ -6,6 +6,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import type { CartItem, OrderItem, OrderStatus } from "@/lib/types";
 import { checkoutSchema, type CheckoutValues } from "@/lib/validators/order";
 import { categorySchema, extraSchema, productSchema, promotionSchema, settingsSchema, zoneSchema } from "@/lib/validators/admin";
+import { absoluteUrl } from "@/lib/utils";
 
 async function requireSupabase() {
   const supabase = await createSupabaseServerClient();
@@ -40,11 +41,13 @@ export async function createOrder(values: CheckoutValues, items: CartItem[], del
   const subtotal = items.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0);
   const total = subtotal + deliveryFee;
   const orderId = crypto.randomUUID();
+  const trackingCode = crypto.randomUUID().replaceAll("-", "").slice(0, 12).toUpperCase();
 
   const { error } = await supabase
     .from("orders")
     .insert({
       id: orderId,
+      tracking_code: trackingCode,
       customer_name: parsed.customer_name,
       customer_phone: parsed.customer_phone,
       order_type: parsed.order_type,
@@ -80,7 +83,7 @@ export async function createOrder(values: CheckoutValues, items: CartItem[], del
   const { error: itemsError } = await supabase.from("order_items").insert(orderItems);
   if (itemsError) throw new Error(itemsError.message);
   revalidatePath("/admin/pedidos");
-  return { ok: true, orderId };
+  return { ok: true, orderId, trackingCode, trackingUrl: absoluteUrl(`/pedido/${trackingCode}`) };
 }
 
 function cleanEmpty<T extends Record<string, unknown>>(input: T) {

@@ -111,6 +111,7 @@ export type OrderStatus = "Nuevo" | "Preparando" | "En camino" | "Entregado" | "
 
 export type Order = {
   id: string;
+  tracking_code?: string;
   customer_name: string;
   customer_phone: string;
   order_type: "Delivery" | "Retiro";
@@ -129,6 +130,14 @@ export type Order = {
   status: OrderStatus;
   created_at?: string;
   order_items?: OrderItem[];
+};
+
+export type PublicOrderDetails = Omit<Order, "order_items" | "order_type" | "order_schedule_type" | "status"> & {
+  tracking_code: string;
+  order_type: "Delivery" | "Retiro" | string;
+  order_schedule_type: "Lo antes posible" | "Programado" | string;
+  status: OrderStatus | string;
+  items: OrderItem[];
 };
 
 export type OrderItem = {

@@ -4,13 +4,13 @@ import { useMemo, useState } from "react";
 import { useForm, useWatch, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { Send } from "lucide-react";
+import { CheckCircle2, Send } from "lucide-react";
 import { createOrder } from "@/app/actions";
 import { buildWhatsAppMessage, buildWhatsAppUrl } from "@/lib/order-message";
 import { getCartTotals, useCartStore } from "@/lib/stores/cart-store";
 import type { DeliveryZone, RestaurantSettings } from "@/lib/types";
 import { checkoutSchema, type CheckoutValues } from "@/lib/validators/order";
-import { Button } from "../ui/button";
+import { Button, LinkButton } from "../ui/button";
 import { Input, Label, Select, Textarea } from "../ui/field";
 import { CartSummary } from "./cart-summary";
 
@@ -18,6 +18,10 @@ export function CheckoutForm({ settings, zones }: { settings: RestaurantSettings
   const items = useCartStore((state) => state.items);
   const clear = useCartStore((state) => state.clear);
   const [sending, setSending] = useState(false);
+  const [completedOrder, setCompletedOrder] = useState<{
+    trackingCode: string | null;
+    trackingUrl: string | null;
+  } | null>(null);
   const form = useForm<CheckoutValues>({
     resolver: zodResolver(checkoutSchema) as Resolver<CheckoutValues>,
     defaultValues: {
@@ -41,18 +45,51 @@ export function CheckoutForm({ settings, zones }: { settings: RestaurantSettings
     }
     setSending(true);
     try {
+      let createdOrder: Awaited<ReturnType<typeof createOrder>> | null = null;
       if (settings.save_orders_enabled) {
-        await createOrder(values, items, deliveryFee);
+        createdOrder = await createOrder(values, items, deliveryFee);
       }
       const message = buildWhatsAppMessage({ values, items, settings, deliveryFee });
       window.open(buildWhatsAppUrl(settings.whatsapp_number, message), "_blank", "noopener,noreferrer");
       toast.success("Pedido preparado para WhatsApp");
+      setCompletedOrder({
+        trackingCode: createdOrder?.trackingCode ?? null,
+        trackingUrl: createdOrder?.trackingUrl ?? null,
+      });
       clear();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "No se pudo enviar el pedido");
     } finally {
       setSending(false);
     }
+  }
+
+  if (completedOrder) {
+    return (
+      <section className="container-page grid min-h-[60vh] place-items-center py-10">
+        <div className="grid max-w-2xl gap-5 rounded-3xl border border-border bg-white p-6 text-center soft-shadow">
+          <CheckCircle2 className="mx-auto text-success" size={56} />
+          <div>
+            <h1 className="text-3xl font-black">Pedido enviado</h1>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Tu pedido fue preparado para WhatsApp. Tambien podes ver los detalles y seguir el estado desde esta pagina.
+            </p>
+          </div>
+          {completedOrder.trackingCode ? (
+            <div className="rounded-2xl bg-background p-4">
+              <p className="text-xs font-black uppercase text-muted-foreground">Codigo de seguimiento</p>
+              <p className="mt-1 font-mono text-2xl font-black">{completedOrder.trackingCode}</p>
+            </div>
+          ) : null}
+          <div className="grid gap-3 sm:grid-cols-2">
+            {completedOrder.trackingCode ? (
+              <LinkButton href={`/pedido/${completedOrder.trackingCode}`}>Ver detalles</LinkButton>
+            ) : null}
+            <LinkButton href="/menu" variant="outline">Volver al menu</LinkButton>
+          </div>
+        </div>
+      </section>
+    );
   }
 
   return (

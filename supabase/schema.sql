@@ -126,6 +126,7 @@ create table if not exists public.delivery_zones (
 
 create table if not exists public.orders (
   id uuid primary key default gen_random_uuid(),
+  tracking_code text not null default upper(substr(replace(gen_random_uuid()::text, '-', ''), 1, 12)),
   customer_name text not null,
   customer_phone text not null,
   order_type text not null check (order_type in ('Delivery', 'Retiro')),
@@ -180,6 +181,7 @@ create index if not exists idx_products_category on public.products(category_id)
 create index if not exists idx_products_public on public.products(is_available, is_featured, is_promotion, display_order);
 create index if not exists idx_promotions_active on public.promotions(is_active, starts_at, ends_at);
 create index if not exists idx_orders_status_created on public.orders(status, created_at desc);
+create unique index if not exists idx_orders_tracking_code on public.orders(tracking_code);
 create index if not exists idx_order_items_order on public.order_items(order_id);
 
 drop trigger if exists restaurant_settings_updated_at on public.restaurant_settings;
@@ -272,6 +274,78 @@ create policy "admin manage profiles" on public.admin_profiles for all using (ap
 
 create policy "public read pages" on public.business_pages for select using (true);
 create policy "admin manage pages" on public.business_pages for all using (app_private.is_admin()) with check (app_private.is_admin());
+
+create or replace function public.get_public_order(p_tracking_code text)
+returns table (
+  id uuid,
+  tracking_code text,
+  customer_name text,
+  customer_phone text,
+  order_type text,
+  address text,
+  zone text,
+  reference text,
+  map_link text,
+  payment_method text,
+  cash_amount integer,
+  order_schedule_type text,
+  scheduled_for timestamptz,
+  general_notes text,
+  subtotal integer,
+  delivery_fee integer,
+  total integer,
+  status text,
+  created_at timestamptz,
+  items jsonb
+)
+language sql
+security definer
+set search_path = public
+as $$
+  select
+    o.id,
+    o.tracking_code,
+    o.customer_name,
+    o.customer_phone,
+    o.order_type,
+    o.address,
+    o.zone,
+    o.reference,
+    o.map_link,
+    o.payment_method,
+    o.cash_amount,
+    o.order_schedule_type,
+    o.scheduled_for,
+    o.general_notes,
+    o.subtotal,
+    o.delivery_fee,
+    o.total,
+    o.status,
+    o.created_at,
+    coalesce(
+      jsonb_agg(
+        jsonb_build_object(
+          'id', oi.id,
+          'product_id', oi.product_id,
+          'product_name_snapshot', oi.product_name_snapshot,
+          'quantity', oi.quantity,
+          'unit_price', oi.unit_price,
+          'selected_variant', oi.selected_variant,
+          'extras_snapshot', oi.extras_snapshot,
+          'notes', oi.notes,
+          'line_total', oi.line_total
+        ) order by oi.id
+      ) filter (where oi.id is not null),
+      '[]'::jsonb
+    ) as items
+  from public.orders o
+  left join public.order_items oi on oi.order_id = o.id
+  where o.tracking_code = upper(trim(p_tracking_code))
+  group by o.id
+  limit 1;
+$$;
+
+grant execute on function public.get_public_order(text) to anon, authenticated;
 
 insert into public.restaurant_settings (
   id, business_name, slogan, hero_image_url, phone, whatsapp_number, address, map_url,

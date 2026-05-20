@@ -1,5 +1,5 @@
 import { demoExtras, demoPublicData } from "./demo-data";
-import type { Category, DeliveryZone, Extra, Order, Product, Promotion, PublicData, RestaurantSettings } from "./types";
+import type { Category, DeliveryZone, Extra, Order, Product, Promotion, PublicData, PublicOrderDetails, RestaurantSettings } from "./types";
 import { createSupabaseServerClient } from "./supabase/server";
 
 export async function getPublicData(): Promise<PublicData> {
@@ -62,5 +62,22 @@ export async function getAdminData() {
     zones: (zones.data as DeliveryZone[] | null) ?? demoPublicData.zones,
     orders: (orders.data as Order[] | null) ?? [],
     isDemo: false,
+  };
+}
+
+export async function getPublicOrderDetails(trackingCode: string): Promise<PublicOrderDetails | null> {
+  const supabase = await createSupabaseServerClient();
+  if (!supabase) return null;
+
+  const { data, error } = await supabase.rpc("get_public_order", {
+    p_tracking_code: trackingCode,
+  });
+
+  if (error || !data?.length) return null;
+
+  const order = data[0] as Omit<PublicOrderDetails, "items"> & { items: unknown };
+  return {
+    ...order,
+    items: Array.isArray(order.items) ? (order.items as PublicOrderDetails["items"]) : [],
   };
 }
