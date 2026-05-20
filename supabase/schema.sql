@@ -264,7 +264,6 @@ create policy "public insert valid order items" on public.order_items for insert
   and quantity > 0
   and unit_price >= 0
   and line_total >= 0
-  and exists (select 1 from public.orders o where o.id = order_id)
 );
 create policy "admin read order items" on public.order_items for select using (app_private.is_admin());
 

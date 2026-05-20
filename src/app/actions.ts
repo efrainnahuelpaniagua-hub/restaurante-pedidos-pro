@@ -39,10 +39,12 @@ export async function createOrder(values: CheckoutValues, items: CartItem[], del
       : null;
   const subtotal = items.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0);
   const total = subtotal + deliveryFee;
+  const orderId = crypto.randomUUID();
 
-  const { data: order, error } = await supabase
+  const { error } = await supabase
     .from("orders")
     .insert({
+      id: orderId,
       customer_name: parsed.customer_name,
       customer_phone: parsed.customer_phone,
       order_type: parsed.order_type,
@@ -59,14 +61,12 @@ export async function createOrder(values: CheckoutValues, items: CartItem[], del
       delivery_fee: deliveryFee,
       total,
       status: "Nuevo",
-    })
-    .select("id")
-    .single();
+    });
 
-  if (error || !order) throw new Error(error?.message || "No se pudo guardar el pedido.");
+  if (error) throw new Error(error.message || "No se pudo guardar el pedido.");
 
   const orderItems: OrderItem[] = items.map((item) => ({
-    order_id: order.id,
+    order_id: orderId,
     product_id: item.productId,
     product_name_snapshot: item.name,
     quantity: item.quantity,
@@ -80,7 +80,7 @@ export async function createOrder(values: CheckoutValues, items: CartItem[], del
   const { error: itemsError } = await supabase.from("order_items").insert(orderItems);
   if (itemsError) throw new Error(itemsError.message);
   revalidatePath("/admin/pedidos");
-  return { ok: true, orderId: order.id as string };
+  return { ok: true, orderId };
 }
 
 function cleanEmpty<T extends Record<string, unknown>>(input: T) {
