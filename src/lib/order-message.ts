@@ -7,11 +7,15 @@ export function buildWhatsAppMessage({
   items,
   settings,
   deliveryFee,
+  trackingCode,
+  trackingUrl,
 }: {
   values: CheckoutValues;
   items: CartItem[];
   settings: RestaurantSettings;
   deliveryFee: number;
+  trackingCode?: string | null;
+  trackingUrl?: string | null;
 }) {
   const subtotal = items.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0);
   const total = subtotal + deliveryFee;
@@ -29,6 +33,8 @@ export function buildWhatsAppMessage({
 
   return [
     "Hola, quiero realizar un pedido:",
+    trackingCode ? `Codigo: ${trackingCode}` : "",
+    trackingUrl ? `Detalle: ${trackingUrl}` : "",
     "",
     `Cliente: ${values.customer_name}`,
     `Telefono: ${values.customer_phone}`,

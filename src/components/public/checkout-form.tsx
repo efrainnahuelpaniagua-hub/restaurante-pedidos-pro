@@ -2,11 +2,13 @@
 
 import { useMemo, useState } from "react";
 import { useForm, useWatch, type Resolver } from "react-hook-form";
+import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { CheckCircle2, Send } from "lucide-react";
+import { CheckCircle2, MessageCircle, Send } from "lucide-react";
 import { createOrder } from "@/app/actions";
 import { buildWhatsAppMessage, buildWhatsAppUrl } from "@/lib/order-message";
+import { saveClientOrder } from "@/lib/client-orders";
 import { getCartTotals, useCartStore } from "@/lib/stores/cart-store";
 import type { DeliveryZone, RestaurantSettings } from "@/lib/types";
 import { checkoutSchema, type CheckoutValues } from "@/lib/validators/order";
@@ -15,12 +17,14 @@ import { Input, Label, Select, Textarea } from "../ui/field";
 import { CartSummary } from "./cart-summary";
 
 export function CheckoutForm({ settings, zones }: { settings: RestaurantSettings; zones: DeliveryZone[] }) {
+  const router = useRouter();
   const items = useCartStore((state) => state.items);
   const clear = useCartStore((state) => state.clear);
   const [sending, setSending] = useState(false);
   const [completedOrder, setCompletedOrder] = useState<{
     trackingCode: string | null;
     trackingUrl: string | null;
+    whatsappUrl: string | null;
   } | null>(null);
   const form = useForm<CheckoutValues>({
     resolver: zodResolver(checkoutSchema) as Resolver<CheckoutValues>,
@@ -49,12 +53,33 @@ export function CheckoutForm({ settings, zones }: { settings: RestaurantSettings
       if (settings.save_orders_enabled) {
         createdOrder = await createOrder(values, items, deliveryFee);
       }
-      const message = buildWhatsAppMessage({ values, items, settings, deliveryFee });
-      window.open(buildWhatsAppUrl(settings.whatsapp_number, message), "_blank", "noopener,noreferrer");
-      toast.success("Pedido preparado para WhatsApp");
+      const message = buildWhatsAppMessage({
+        values,
+        items,
+        settings,
+        deliveryFee,
+        trackingCode: createdOrder?.trackingCode,
+        trackingUrl: createdOrder?.trackingUrl,
+      });
+      const whatsappUrl = buildWhatsAppUrl(settings.whatsapp_number, message);
+      if (createdOrder?.trackingCode) {
+        saveClientOrder({
+          trackingCode: createdOrder.trackingCode,
+          createdAt: new Date().toISOString(),
+          total: totals.total,
+          orderType: values.order_type,
+        });
+      }
+      toast.success("Pedido registrado");
+      clear();
+      if (createdOrder?.trackingCode) {
+        router.push(`/pedido/${createdOrder.trackingCode}?nuevo=1`);
+        return;
+      }
       setCompletedOrder({
         trackingCode: createdOrder?.trackingCode ?? null,
         trackingUrl: createdOrder?.trackingUrl ?? null,
+        whatsappUrl,
       });
       clear();
     } catch (error) {
@@ -72,7 +97,7 @@ export function CheckoutForm({ settings, zones }: { settings: RestaurantSettings
           <div>
             <h1 className="text-3xl font-black">Pedido enviado</h1>
             <p className="mt-2 text-sm text-muted-foreground">
-              Tu pedido fue preparado para WhatsApp. Tambien podes ver los detalles y seguir el estado desde esta pagina.
+              Tu pedido fue registrado. Ahora podes mandar el aviso por WhatsApp o ver el detalle y seguir el estado.
             </p>
           </div>
           {completedOrder.trackingCode ? (
@@ -82,10 +107,20 @@ export function CheckoutForm({ settings, zones }: { settings: RestaurantSettings
             </div>
           ) : null}
           <div className="grid gap-3 sm:grid-cols-2">
-            {completedOrder.trackingCode ? (
-              <LinkButton href={`/pedido/${completedOrder.trackingCode}`}>Ver detalles</LinkButton>
+            {completedOrder.whatsappUrl ? (
+              <a
+                href={completedOrder.whatsappUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition hover:bg-[#cf3f17]"
+              >
+                <MessageCircle size={18} /> Mandar por WhatsApp
+              </a>
             ) : null}
-            <LinkButton href="/menu" variant="outline">Volver al menu</LinkButton>
+            {completedOrder.trackingCode ? (
+              <LinkButton href={`/pedido/${completedOrder.trackingCode}`} variant="outline">Ver detalles</LinkButton>
+            ) : null}
+            <LinkButton href="/mis-pedidos" variant="outline">Mis pedidos</LinkButton>
           </div>
         </div>
       </section>
@@ -162,7 +197,7 @@ export function CheckoutForm({ settings, zones }: { settings: RestaurantSettings
         </div>
 
         <Button disabled={sending || !settings.accepting_orders}>
-          <Send size={18} /> Enviar pedido por WhatsApp
+          <Send size={18} /> Mandar pedido
         </Button>
       </form>
       <CartSummary deliveryFee={deliveryFee} compact />

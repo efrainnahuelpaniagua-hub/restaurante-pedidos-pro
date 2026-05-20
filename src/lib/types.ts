@@ -107,7 +107,7 @@ export type DeliveryZone = {
   display_order: number;
 };
 
-export type OrderStatus = "Nuevo" | "Preparando" | "En camino" | "Entregado" | "Cancelado";
+export type OrderStatus = "Recibido" | "Preparando" | "En camino" | "Listo" | "Entregado" | "Cancelado";
 
 export type Order = {
   id: string;

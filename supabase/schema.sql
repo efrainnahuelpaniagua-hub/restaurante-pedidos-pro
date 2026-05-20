@@ -142,7 +142,7 @@ create table if not exists public.orders (
   subtotal integer not null,
   delivery_fee integer not null default 0,
   total integer not null,
-  status text not null default 'Nuevo' check (status in ('Nuevo', 'Preparando', 'En camino', 'Entregado', 'Cancelado')),
+  status text not null default 'Recibido' check (status in ('Recibido', 'Preparando', 'En camino', 'Listo', 'Entregado', 'Cancelado')),
   created_at timestamptz not null default now()
 );
 
@@ -346,6 +346,50 @@ as $$
 $$;
 
 grant execute on function public.get_public_order(text) to anon, authenticated;
+
+create or replace function public.cancel_public_order(p_tracking_code text)
+returns table(ok boolean, message text, status text)
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  target_order public.orders%rowtype;
+begin
+  select * into target_order
+  from public.orders
+  where tracking_code = upper(trim(p_tracking_code))
+  limit 1;
+
+  if target_order.id is null then
+    return query select false, 'Pedido no encontrado', null::text;
+    return;
+  end if;
+
+  if target_order.status in ('Entregado', 'Cancelado') then
+    return query select false, 'Este pedido ya no se puede cancelar', target_order.status;
+    return;
+  end if;
+
+  if target_order.status <> 'Recibido' then
+    return query select false, 'El pedido ya esta en preparacion y no se puede cancelar', target_order.status;
+    return;
+  end if;
+
+  if target_order.created_at < now() - interval '10 minutes' then
+    return query select false, 'Ya paso el tiempo permitido para cancelar', target_order.status;
+    return;
+  end if;
+
+  update public.orders
+  set status = 'Cancelado'
+  where id = target_order.id;
+
+  return query select true, 'Pedido cancelado correctamente', 'Cancelado'::text;
+end;
+$$;
+
+grant execute on function public.cancel_public_order(text) to anon, authenticated;
 
 insert into public.restaurant_settings (
   id, business_name, slogan, hero_image_url, phone, whatsapp_number, address, map_url,

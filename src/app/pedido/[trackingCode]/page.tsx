@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { CheckCircle2, Clock, CookingPot, PackageCheck, Truck, XCircle } from "lucide-react";
+import { CheckCircle2, Clock, CookingPot, PackageCheck, Store, Truck, XCircle } from "lucide-react";
 import { SiteFooter } from "@/components/public/site-footer";
 import { SiteHeader } from "@/components/public/site-header";
+import { OrderActions } from "@/components/public/order-actions";
 import { Badge } from "@/components/ui/badge";
 import { LinkButton } from "@/components/ui/button";
 import { getPublicData, getPublicOrderDetails } from "@/lib/data";
+import { getVisibleOrderFlow, normalizeOrderStatus } from "@/lib/order-status";
 import type { Json, OrderItem } from "@/lib/types";
 import { formatGs } from "@/lib/utils";
 
@@ -18,13 +20,6 @@ export const metadata: Metadata = {
   description: "Consulta el estado y detalle de tu pedido.",
 };
 
-const statusSteps = [
-  { status: "Nuevo", label: "Recibido", icon: Clock },
-  { status: "Preparando", label: "Preparando", icon: CookingPot },
-  { status: "En camino", label: "En camino", icon: Truck },
-  { status: "Entregado", label: "Entregado", icon: PackageCheck },
-];
-
 export default async function PedidoDetallePage({ params }: PageProps) {
   const { trackingCode } = await params;
   const [{ settings }, order] = await Promise.all([
@@ -34,7 +29,13 @@ export default async function PedidoDetallePage({ params }: PageProps) {
 
   if (!order) notFound();
 
-  const currentIndex = statusSteps.findIndex((step) => step.status === order.status);
+  const normalizedStatus = normalizeOrderStatus(order.status);
+  const statusSteps = getVisibleOrderFlow(order.order_type).map((status) => ({
+    status,
+    label: status,
+    icon: status === "Recibido" ? Clock : status === "Preparando" ? CookingPot : status === "En camino" ? Truck : status === "Listo" ? Store : PackageCheck,
+  }));
+  const currentIndex = statusSteps.findIndex((step) => step.status === normalizedStatus);
   const isCancelled = order.status === "Cancelado";
 
   return (
@@ -50,7 +51,7 @@ export default async function PedidoDetallePage({ params }: PageProps) {
                 Cliente: {order.customer_name} · {new Date(order.created_at || "").toLocaleString("es-PY")}
               </p>
             </div>
-            <Badge className={isCancelled ? "bg-danger text-white" : "bg-primary text-white"}>{order.status}</Badge>
+            <Badge className={isCancelled ? "bg-danger text-white" : "bg-primary text-white"}>{normalizedStatus}</Badge>
           </div>
 
           {isCancelled ? (
@@ -115,6 +116,7 @@ export default async function PedidoDetallePage({ params }: PageProps) {
                 <strong className="text-primary">{formatGs(order.total)}</strong>
               </div>
             </div>
+            <OrderActions order={{ ...order, status: normalizedStatus }} settings={settings} />
             <LinkButton href="/menu" variant="outline">Hacer otro pedido</LinkButton>
           </aside>
         </section>

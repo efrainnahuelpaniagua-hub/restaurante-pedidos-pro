@@ -63,7 +63,7 @@ export async function createOrder(values: CheckoutValues, items: CartItem[], del
       subtotal,
       delivery_fee: deliveryFee,
       total,
-      status: "Nuevo",
+      status: "Recibido",
     });
 
   if (error) throw new Error(error.message || "No se pudo guardar el pedido.");
@@ -202,4 +202,24 @@ export async function updateOrderStatus(id: string, status: OrderStatus) {
   const { error } = await supabase.from("orders").update({ status }).eq("id", id);
   if (error) throw new Error(error.message);
   revalidatePath("/admin/pedidos");
+  revalidatePath("/admin/dashboard");
+}
+
+export async function cancelPublicOrder(trackingCode: string) {
+  const supabase = await createSupabaseServerClient();
+  if (!supabase) return { ok: false, message: "Supabase no esta configurado.", status: null };
+
+  const { data, error } = await supabase.rpc("cancel_public_order", {
+    p_tracking_code: trackingCode,
+  });
+
+  if (error) return { ok: false, message: error.message, status: null };
+  const result = Array.isArray(data) ? data[0] : data;
+  revalidatePath(`/pedido/${trackingCode}`);
+  revalidatePath("/admin/pedidos");
+  return {
+    ok: Boolean(result?.ok),
+    message: String(result?.message || "No se pudo cancelar el pedido."),
+    status: result?.status ? String(result.status) : null,
+  };
 }

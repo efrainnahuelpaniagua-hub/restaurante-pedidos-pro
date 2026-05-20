@@ -13,6 +13,7 @@ const links = [
   { href: "/menu?sort=promotions", label: "Promociones" },
   { href: "/nosotros", label: "Nosotros" },
   { href: "/contacto", label: "Contacto" },
+  { href: "/mis-pedidos", label: "Mis pedidos" },
 ];
 
 export function SiteHeader({ settings }: { settings: RestaurantSettings }) {
