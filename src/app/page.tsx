@@ -1,65 +1,113 @@
-import Image from "next/image";
+import { Clock, MapPin, PackageCheck, Sparkles, Truck, Utensils } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
+import { getPublicData } from "@/lib/data";
+import { formatGs } from "@/lib/utils";
+import { LinkButton } from "@/components/ui/button";
+import { SiteHeader } from "@/components/public/site-header";
+import { SiteFooter } from "@/components/public/site-footer";
+import { ProductCard } from "@/components/public/product-card";
 
-export default function Home() {
+export default async function Home() {
+  const { settings, categories, products, promotions } = await getPublicData();
+  const featured = products.filter((product) => product.is_featured).slice(0, 4);
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
+    <>
+      <SiteHeader settings={settings} />
+      <main>
+        <section className="relative overflow-hidden bg-[#2a1710] text-white">
+          <img src={settings.hero_image_url || ""} alt="Comida destacada de Sabor Express" className="absolute inset-0 h-full w-full object-cover opacity-45" />
+          <div className="container-page relative grid min-h-[calc(100vh-80px)] content-center gap-8 py-16 lg:grid-cols-[1fr_420px]">
+            <div className="max-w-2xl">
+              <span className="inline-flex rounded-full bg-white/15 px-4 py-2 text-sm font-bold backdrop-blur">{settings.slogan}</span>
+              <h1 className="mt-5 text-5xl font-black leading-tight md:text-7xl">Pedi tu comida favorita en pocos pasos</h1>
+              <p className="mt-5 max-w-xl text-lg text-white/85">Elegi tus platos, agregalos al carrito y envia el pedido por WhatsApp.</p>
+              <div className="mt-8 flex flex-wrap gap-3">
+                <LinkButton href="/menu">Ver menu</LinkButton>
+                <LinkButton href="/checkout" variant="secondary">Pedir ahora</LinkButton>
+              </div>
+            </div>
+            <div className="hidden self-end rounded-3xl bg-white/12 p-5 backdrop-blur lg:block">
+              <p className="text-sm font-bold text-white/80">Delivery desde</p>
+              <p className="text-4xl font-black">{formatGs(settings.delivery_fee)}</p>
+              <p className="mt-3 text-sm text-white/80">{settings.opening_hours}</p>
+            </div>
+          </div>
+        </section>
+
+        <section className="container-page -mt-10 relative z-10 grid gap-4 md:grid-cols-4">
+          {([
+            [Truck, "Delivery disponible", "Llegamos a tus zonas favoritas"],
+            [PackageCheck, "Retiro en local", "Te avisamos cuando este listo"],
+            [Clock, "Tiempo estimado", "30 a 45 minutos"],
+            [MapPin, "Ciudad del Este", settings.address],
+          ] as [LucideIcon, string, string][]).map(([Icon, title, text]) => (
+            <div key={String(title)} className="rounded-2xl border border-border bg-white p-5 soft-shadow">
+              <Icon className="text-primary" size={26} />
+              <p className="mt-3 font-black">{String(title)}</p>
+              <p className="mt-1 text-sm text-muted-foreground">{String(text)}</p>
+            </div>
+          ))}
+        </section>
+
+        <section className="container-page grid gap-6 py-16">
+          <div className="flex items-end justify-between gap-4">
+            <div>
+              <p className="text-sm font-black uppercase text-primary">Categorias</p>
+              <h2 className="text-3xl font-black">Elegi por antojo</h2>
+            </div>
+            <LinkButton href="/menu" variant="outline">Ver todo</LinkButton>
+          </div>
+          <div className="grid grid-auto-fit gap-4">
+            {categories.slice(0, 7).map((category) => (
+              <a key={category.id} href={`/menu?category=${category.id}`} className="rounded-2xl border border-border bg-white p-5 transition hover:-translate-y-1 hover:shadow-xl">
+                <Utensils className="text-primary" />
+                <p className="mt-4 text-lg font-black">{category.name}</p>
+                <p className="mt-1 text-sm text-muted-foreground">{category.description}</p>
+              </a>
+            ))}
+          </div>
+        </section>
+
+        <section className="bg-white py-16">
+          <div className="container-page grid gap-6">
+            <div>
+              <p className="text-sm font-black uppercase text-primary">Destacados</p>
+              <h2 className="text-3xl font-black">Favoritos de la casa</h2>
+            </div>
+            <div className="grid grid-auto-fit gap-5">
+              {featured.map((product) => <ProductCard key={product.id} product={product} />)}
+            </div>
+          </div>
+        </section>
+
+        <section className="container-page grid gap-6 py-16">
+          <div>
+            <p className="text-sm font-black uppercase text-primary">Promociones</p>
+            <h2 className="text-3xl font-black">Ofertas activas</h2>
+          </div>
+          <div className="grid gap-5 md:grid-cols-2">
+            {promotions.map((promo) => (
+              <article key={promo.id} className="overflow-hidden rounded-3xl bg-[#27140d] text-white soft-shadow md:grid md:grid-cols-[1fr_220px]">
+                <div className="p-6">
+                  <Sparkles className="text-secondary" />
+                  <h3 className="mt-4 text-2xl font-black">{promo.title}</h3>
+                  <p className="mt-2 text-white/75">{promo.description}</p>
+                  <p className="mt-5 text-3xl font-black text-secondary">{formatGs(promo.promo_price)}</p>
+                </div>
+                {promo.image_url && <img src={promo.image_url} alt={promo.title} className="h-full min-h-56 w-full object-cover" />}
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section className="container-page rounded-3xl bg-foreground p-8 text-white md:p-12">
+          <h2 className="text-3xl font-black">Mira el menu y hace tu pedido</h2>
+          <p className="mt-3 max-w-2xl text-white/75">Ingredientes frescos, atencion rapida, pedidos faciles y precios pensados para disfrutar sin vueltas.</p>
+          <LinkButton href="/menu" className="mt-6" variant="secondary">Empezar pedido</LinkButton>
+        </section>
       </main>
-    </div>
+      <SiteFooter settings={settings} />
+    </>
   );
 }
