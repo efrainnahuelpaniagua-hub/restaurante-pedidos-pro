@@ -5,6 +5,7 @@ create schema if not exists app_private;
 create or replace function public.set_updated_at()
 returns trigger
 language plpgsql
+set search_path = public
 as $$
 begin
   new.updated_at = now();
@@ -244,12 +245,26 @@ create policy "admin manage promotions" on public.promotions for all using (app_
 create policy "public read active zones" on public.delivery_zones for select using (is_active = true or app_private.is_admin());
 create policy "admin manage zones" on public.delivery_zones for all using (app_private.is_admin()) with check (app_private.is_admin());
 
-create policy "public insert orders" on public.orders for insert with check (true);
+create policy "public insert valid orders" on public.orders for insert with check (
+  customer_name is not null
+  and length(customer_name) >= 3
+  and customer_phone is not null
+  and length(customer_phone) >= 6
+  and order_type in ('Delivery', 'Retiro')
+  and subtotal >= 0
+  and delivery_fee >= 0
+  and total >= subtotal
+);
 create policy "admin read orders" on public.orders for select using (app_private.is_admin());
 create policy "admin update orders" on public.orders for update using (app_private.is_admin()) with check (app_private.is_admin());
 
-create policy "public insert order items" on public.order_items for insert with check (
-  exists (select 1 from public.orders o where o.id = order_id)
+create policy "public insert valid order items" on public.order_items for insert with check (
+  order_id is not null
+  and product_name_snapshot is not null
+  and quantity > 0
+  and unit_price >= 0
+  and line_total >= 0
+  and exists (select 1 from public.orders o where o.id = order_id)
 );
 create policy "admin read order items" on public.order_items for select using (app_private.is_admin());
 
