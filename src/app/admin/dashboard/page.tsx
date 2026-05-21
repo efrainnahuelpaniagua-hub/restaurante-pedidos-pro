@@ -30,24 +30,33 @@ export default async function DashboardPage() {
           <h1 className="text-3xl font-black">Dashboard</h1>
           <p className="text-sm text-muted-foreground">Resumen comercial y operativo del restaurante.</p>
         </div>
-        <div className="grid grid-auto-fit gap-4">
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
           {cards.map(([Icon, title, value]) => (
-            <article key={String(title)} className="rounded-2xl border border-border bg-white p-5 soft-shadow">
+            <article key={String(title)} className="min-w-0 rounded-2xl border border-border bg-white p-4 soft-shadow sm:p-5">
               <Icon className="text-primary" size={24} />
               <p className="mt-4 text-sm font-bold text-muted-foreground">{String(title)}</p>
-              <p className="mt-1 text-3xl font-black">{String(value)}</p>
+              <p className="mt-1 text-2xl font-black sm:text-3xl">{String(value)}</p>
             </article>
           ))}
         </div>
-        <div className="rounded-2xl border border-border bg-white p-5 soft-shadow">
+        <div className="rounded-2xl border border-border bg-white p-4 soft-shadow sm:p-5">
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div>
               <h2 className="text-2xl font-black">Detalles</h2>
               <p className="text-sm text-muted-foreground">Ventas calculadas solo con pedidos entregados. Zona horaria: {metrics.timezone}.</p>
             </div>
           </div>
-          <div className="mt-5 overflow-x-auto">
-            <table className="w-full min-w-[560px] text-left text-sm">
+          <div className="mt-5 grid gap-3 md:hidden">
+            {[metrics.today, metrics.week, metrics.month].map((item) => (
+              <article key={item.label} className="rounded-xl bg-background p-4">
+                <p className="font-black">{item.label}</p>
+                <p className="mt-1 text-sm text-muted-foreground">{item.orders} pedidos entregados</p>
+                <p className="mt-2 text-xl font-black text-primary">{formatGs(item.total)}</p>
+              </article>
+            ))}
+          </div>
+          <div className="mt-5 hidden overflow-x-auto md:block">
+            <table className="w-full text-left text-sm">
               <thead className="bg-muted text-xs uppercase text-muted-foreground">
                 <tr>
                   <th className="rounded-l-xl p-3">Periodo</th>

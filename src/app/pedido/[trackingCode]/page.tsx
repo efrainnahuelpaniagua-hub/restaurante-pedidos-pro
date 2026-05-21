@@ -41,12 +41,12 @@ export default async function PedidoDetallePage({ params }: PageProps) {
   return (
     <>
       <SiteHeader settings={settings} />
-      <main className="container-page grid gap-8 py-10">
-        <section className="rounded-3xl border border-border bg-white p-5 soft-shadow md:p-8">
+      <main className="container-page grid gap-6 py-6 sm:gap-8 sm:py-10">
+        <section className="rounded-3xl border border-border bg-white p-4 soft-shadow sm:p-5 md:p-8">
           <div className="flex flex-wrap items-start justify-between gap-4">
-            <div>
+            <div className="min-w-0">
               <p className="text-sm font-black uppercase text-primary">Detalle del pedido</p>
-              <h1 className="mt-2 text-3xl font-black">Pedido #{order.tracking_code}</h1>
+              <h1 className="mt-2 break-all text-2xl font-black sm:text-3xl">Pedido #{order.tracking_code}</h1>
               <p className="mt-2 text-sm text-muted-foreground">
                 Cliente: {order.customer_name} · {new Date(order.created_at || "").toLocaleString("es-PY")}
               </p>
@@ -60,14 +60,14 @@ export default async function PedidoDetallePage({ params }: PageProps) {
               <p className="mt-2 font-black">Este pedido fue cancelado.</p>
             </div>
           ) : (
-            <div className="mt-8 grid gap-3 md:grid-cols-4">
+            <div className="mt-8 grid grid-cols-2 gap-3 md:grid-cols-4">
               {statusSteps.map((step, index) => {
                 const Icon = step.icon;
                 const active = currentIndex >= index;
                 return (
                   <div
                     key={step.status}
-                    className={`rounded-2xl border p-4 ${
+                    className={`rounded-2xl border p-3 sm:p-4 ${
                       active ? "border-primary bg-orange-50 text-primary" : "border-border bg-background text-muted-foreground"
                     }`}
                   >
@@ -80,9 +80,9 @@ export default async function PedidoDetallePage({ params }: PageProps) {
           )}
         </section>
 
-        <section className="grid gap-6 lg:grid-cols-[1fr_360px]">
-          <div className="rounded-3xl border border-border bg-white p-5 soft-shadow">
-            <h2 className="text-2xl font-black">Productos</h2>
+        <section className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
+          <div className="min-w-0 rounded-3xl border border-border bg-white p-4 soft-shadow sm:p-5">
+            <h2 className="text-xl font-black sm:text-2xl">Productos</h2>
             <div className="mt-5 grid gap-3">
               {order.items.map((item) => (
                 <OrderItemRow key={item.id} item={item} />
@@ -90,8 +90,8 @@ export default async function PedidoDetallePage({ params }: PageProps) {
             </div>
           </div>
 
-          <aside className="grid gap-4 rounded-3xl border border-border bg-white p-5 soft-shadow">
-            <h2 className="text-2xl font-black">Resumen</h2>
+          <aside className="grid gap-4 rounded-3xl border border-border bg-white p-4 soft-shadow sm:p-5">
+            <h2 className="text-xl font-black sm:text-2xl">Resumen</h2>
             <div className="grid gap-2 text-sm">
               <Row label="Tipo" value={order.order_type} />
               <Row label="Telefono" value={order.customer_phone} />
@@ -111,9 +111,9 @@ export default async function PedidoDetallePage({ params }: PageProps) {
             <div className="grid gap-2 border-t border-border pt-4 text-sm">
               <Row label="Subtotal" value={formatGs(order.subtotal)} strong />
               <Row label="Delivery" value={formatGs(order.delivery_fee)} strong />
-              <div className="flex justify-between text-xl">
+              <div className="flex justify-between gap-3 text-xl">
                 <span className="font-black">Total</span>
-                <strong className="text-primary">{formatGs(order.total)}</strong>
+                <strong className="whitespace-nowrap text-primary">{formatGs(order.total)}</strong>
               </div>
             </div>
             <OrderActions order={{ ...order, status: normalizedStatus }} settings={settings} />
@@ -130,8 +130,8 @@ function OrderItemRow({ item }: { item: OrderItem }) {
   const extras = extrasText(item.extras_snapshot);
   return (
     <article className="rounded-2xl bg-background p-4">
-      <div className="flex justify-between gap-3">
-        <div>
+      <div className="grid gap-2 sm:flex sm:justify-between sm:gap-3">
+        <div className="min-w-0">
           <p className="font-black">{item.quantity}x {item.product_name_snapshot}</p>
           <p className="mt-1 text-sm text-muted-foreground">
             {[item.selected_variant, extras].filter(Boolean).join(" · ") || "Sin extras"}
@@ -146,9 +146,9 @@ function OrderItemRow({ item }: { item: OrderItem }) {
 
 function Row({ label, value, strong = false }: { label: string; value: string; strong?: boolean }) {
   return (
-    <div className="flex justify-between gap-3">
+    <div className="grid gap-1 sm:flex sm:justify-between sm:gap-3">
       <span className="text-muted-foreground">{label}</span>
-      <span className={strong ? "font-black" : "font-semibold"}>{value}</span>
+      <span className={`${strong ? "font-black" : "font-semibold"} break-words sm:text-right`}>{value}</span>
     </div>
   );
 }

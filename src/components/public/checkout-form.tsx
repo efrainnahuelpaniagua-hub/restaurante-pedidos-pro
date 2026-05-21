@@ -92,7 +92,7 @@ export function CheckoutForm({ settings, zones }: { settings: RestaurantSettings
   if (completedOrder) {
     return (
       <section className="container-page grid min-h-[60vh] place-items-center py-10">
-        <div className="grid max-w-2xl gap-5 rounded-3xl border border-border bg-white p-6 text-center soft-shadow">
+        <div className="grid w-full max-w-2xl gap-5 rounded-3xl border border-border bg-white p-4 text-center soft-shadow sm:p-6">
           <CheckCircle2 className="mx-auto text-success" size={56} />
           <div>
             <h1 className="text-3xl font-black">Pedido enviado</h1>
@@ -103,7 +103,7 @@ export function CheckoutForm({ settings, zones }: { settings: RestaurantSettings
           {completedOrder.trackingCode ? (
             <div className="rounded-2xl bg-background p-4">
               <p className="text-xs font-black uppercase text-muted-foreground">Codigo de seguimiento</p>
-              <p className="mt-1 font-mono text-2xl font-black">{completedOrder.trackingCode}</p>
+              <p className="mt-1 break-all font-mono text-xl font-black sm:text-2xl">{completedOrder.trackingCode}</p>
             </div>
           ) : null}
           <div className="grid gap-3 sm:grid-cols-2">
@@ -196,7 +196,7 @@ export function CheckoutForm({ settings, zones }: { settings: RestaurantSettings
           <strong>Total del pedido:</strong> {new Intl.NumberFormat("es-PY").format(totals.total)} Gs.
         </div>
 
-        <Button disabled={sending || !settings.accepting_orders}>
+        <Button className="w-full" disabled={sending || !settings.accepting_orders}>
           <Send size={18} /> Mandar pedido
         </Button>
       </form>

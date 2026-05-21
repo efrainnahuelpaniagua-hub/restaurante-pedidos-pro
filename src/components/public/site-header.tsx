@@ -22,18 +22,18 @@ export function SiteHeader({ settings }: { settings: RestaurantSettings }) {
 
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-background/92 backdrop-blur">
-      <div className="container-page flex min-h-20 items-center justify-between gap-4">
-        <Link href="/" className="flex items-center gap-3 font-black">
-          <span className="grid size-12 place-items-center rounded-2xl bg-primary text-lg text-white soft-shadow">
+      <div className="container-page grid min-h-20 grid-cols-[minmax(0,1fr)_auto] items-center gap-3 sm:gap-4">
+        <Link href="/" className="flex min-w-0 items-center gap-3 font-black">
+          <span className="grid size-11 shrink-0 place-items-center rounded-2xl bg-primary text-lg text-white soft-shadow sm:size-12">
             {settings.logo_url ? (
               <img src={settings.logo_url} alt={settings.business_name} className="size-full rounded-2xl object-cover" />
             ) : (
               "SE"
             )}
           </span>
-          <span>
-            <span className="block leading-tight">{settings.business_name}</span>
-            <span className="block text-xs font-semibold text-muted-foreground">{settings.slogan}</span>
+          <span className="min-w-0">
+            <span className="block truncate leading-tight">{settings.business_name}</span>
+            <span className="hidden truncate text-xs font-semibold text-muted-foreground sm:block">{settings.slogan}</span>
           </span>
         </Link>
 
@@ -45,7 +45,7 @@ export function SiteHeader({ settings }: { settings: RestaurantSettings }) {
           ))}
         </nav>
 
-        <div className="flex items-center gap-2">
+        <div className="shrink-0 flex items-center gap-2">
           <Link
             href="/checkout"
             className="relative inline-flex size-11 items-center justify-center rounded-xl bg-foreground text-white"

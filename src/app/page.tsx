@@ -17,14 +17,14 @@ export default async function Home() {
       <main>
         <section className="relative overflow-hidden bg-[#2a1710] text-white">
           <img src={settings.hero_image_url || ""} alt="Comida destacada de Sabor Express" className="absolute inset-0 h-full w-full object-cover opacity-45" />
-          <div className="container-page relative grid min-h-[calc(100vh-80px)] content-center gap-8 py-16 lg:grid-cols-[1fr_420px]">
+          <div className="container-page relative grid min-h-[calc(100svh-80px)] content-center gap-8 py-12 sm:py-16 lg:grid-cols-[1fr_420px]">
             <div className="max-w-2xl">
               <span className="inline-flex rounded-full bg-white/15 px-4 py-2 text-sm font-bold backdrop-blur">{settings.slogan}</span>
-              <h1 className="mt-5 text-5xl font-black leading-tight md:text-7xl">Pedi tu comida favorita en pocos pasos</h1>
-              <p className="mt-5 max-w-xl text-lg text-white/85">Elegi tus platos, agregalos al carrito y envia el pedido por WhatsApp.</p>
-              <div className="mt-8 flex flex-wrap gap-3">
-                <LinkButton href="/menu">Ver menu</LinkButton>
-                <LinkButton href="/checkout" variant="secondary">Pedir ahora</LinkButton>
+              <h1 className="mt-5 text-3xl font-black leading-tight sm:text-5xl md:text-7xl">Pedi tu comida favorita en pocos pasos</h1>
+              <p className="mt-5 max-w-xl text-base text-white/85 sm:text-lg">Elegi tus platos, agregalos al carrito y envia el pedido por WhatsApp.</p>
+              <div className="mt-8 grid gap-3 sm:flex sm:flex-wrap">
+                <LinkButton href="/menu" className="w-full sm:w-auto">Ver menu</LinkButton>
+                <LinkButton href="/checkout" className="w-full sm:w-auto" variant="secondary">Pedir ahora</LinkButton>
               </div>
             </div>
             <div className="hidden self-end rounded-3xl bg-white/12 p-5 backdrop-blur lg:block">
@@ -51,12 +51,12 @@ export default async function Home() {
         </section>
 
         <section className="container-page grid gap-6 py-16">
-          <div className="flex items-end justify-between gap-4">
+          <div className="grid gap-4 sm:flex sm:items-end sm:justify-between">
             <div>
               <p className="text-sm font-black uppercase text-primary">Categorias</p>
               <h2 className="text-3xl font-black">Elegi por antojo</h2>
             </div>
-            <LinkButton href="/menu" variant="outline">Ver todo</LinkButton>
+            <LinkButton href="/menu" className="w-full sm:w-auto" variant="outline">Ver todo</LinkButton>
           </div>
           <div className="grid grid-auto-fit gap-4">
             {categories.slice(0, 7).map((category) => (
@@ -101,10 +101,10 @@ export default async function Home() {
           </div>
         </section>
 
-        <section className="container-page rounded-3xl bg-foreground p-8 text-white md:p-12">
+        <section className="container-page rounded-3xl bg-foreground p-5 text-white sm:p-8 md:p-12">
           <h2 className="text-3xl font-black">Mira el menu y hace tu pedido</h2>
           <p className="mt-3 max-w-2xl text-white/75">Ingredientes frescos, atencion rapida, pedidos faciles y precios pensados para disfrutar sin vueltas.</p>
-          <LinkButton href="/menu" className="mt-6" variant="secondary">Empezar pedido</LinkButton>
+          <LinkButton href="/menu" className="mt-6 w-full sm:w-auto" variant="secondary">Empezar pedido</LinkButton>
         </section>
       </main>
       <SiteFooter settings={settings} />

@@ -36,13 +36,13 @@ export function ProductCard({ product }: { product: Product }) {
           <h3 className="text-lg font-black">{product.name}</h3>
           <p className="line-clamp-2 mt-1 text-sm text-muted-foreground">{product.short_description}</p>
         </div>
-        <div className="flex items-end justify-between gap-3">
-          <div>
+        <div className="grid gap-3 sm:flex sm:items-end sm:justify-between">
+          <div className="min-w-0">
             {product.offer_price && <p className="text-xs font-semibold text-muted-foreground line-through">{formatGs(product.base_price)}</p>}
             <p className="text-xl font-black text-primary">{formatGs(basePrice)}</p>
           </div>
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={() => setDetailsOpen(true)}>Ver detalles</Button>
+          <div className="grid grid-cols-[1fr_auto] gap-2 sm:flex">
+            <Button className="w-full sm:w-auto" variant="outline" onClick={() => setDetailsOpen(true)}>Ver detalles</Button>
             <QuickAdd product={product} />
           </div>
         </div>
@@ -99,13 +99,13 @@ function ProductDetail({ product, onClose }: { product: Product; onClose: () => 
           <div className="aspect-[4/3] bg-muted md:aspect-auto">
             {product.image_url && <img src={product.image_url} alt={product.name} className="h-full w-full object-cover" />}
           </div>
-          <div className="grid gap-5 p-5">
+          <div className="grid gap-5 p-4 sm:p-5">
             <div className="flex items-start justify-between gap-4">
-              <div>
-                <h2 className="text-2xl font-black">{product.name}</h2>
+              <div className="min-w-0">
+                <h2 className="break-words text-2xl font-black">{product.name}</h2>
                 <p className="mt-2 text-sm text-muted-foreground">{product.long_description}</p>
               </div>
-              <button onClick={onClose} className="rounded-full bg-muted px-3 py-1 font-black" aria-label="Cerrar">x</button>
+              <button onClick={onClose} className="shrink-0 rounded-full bg-muted px-3 py-1 font-black" aria-label="Cerrar">x</button>
             </div>
 
             {!!product.product_variants?.length && (
@@ -113,9 +113,9 @@ function ProductDetail({ product, onClose }: { product: Product; onClose: () => 
                 <legend className="font-bold">Variante</legend>
                 <div className="grid gap-2">
                   {product.product_variants.map((item) => (
-                    <label key={item.id} className="flex items-center justify-between rounded-xl border border-border bg-white p-3 text-sm font-semibold">
-                      <span><input type="radio" name="variant" className="mr-2" checked={variantId === item.id} onChange={() => setVariantId(item.id)} />{item.name}</span>
-                      <span>{item.price_modifier ? `+ ${formatGs(item.price_modifier)}` : "Incluido"}</span>
+                    <label key={item.id} className="grid gap-2 rounded-xl border border-border bg-white p-3 text-sm font-semibold sm:flex sm:items-center sm:justify-between">
+                      <span className="min-w-0 break-words"><input type="radio" name="variant" className="mr-2" checked={variantId === item.id} onChange={() => setVariantId(item.id)} />{item.name}</span>
+                      <span className="whitespace-nowrap">{item.price_modifier ? `+ ${formatGs(item.price_modifier)}` : "Incluido"}</span>
                     </label>
                   ))}
                 </div>
@@ -126,8 +126,8 @@ function ProductDetail({ product, onClose }: { product: Product; onClose: () => 
               <legend className="font-bold">Extras opcionales</legend>
               <div className="grid gap-2">
                 {extras.map((extra) => (
-                  <label key={extra.id} className="flex items-center justify-between rounded-xl border border-border bg-white p-3 text-sm font-semibold">
-                    <span>
+                  <label key={extra.id} className="grid gap-2 rounded-xl border border-border bg-white p-3 text-sm font-semibold sm:flex sm:items-center sm:justify-between">
+                    <span className="min-w-0 break-words">
                       <input
                         type="checkbox"
                         className="mr-2"
@@ -136,7 +136,7 @@ function ProductDetail({ product, onClose }: { product: Product; onClose: () => 
                       />
                       {extra.name}
                     </span>
-                    <span>+ {formatGs(extra.price)}</span>
+                    <span className="whitespace-nowrap">+ {formatGs(extra.price)}</span>
                   </label>
                 ))}
               </div>
@@ -144,19 +144,20 @@ function ProductDetail({ product, onClose }: { product: Product; onClose: () => 
 
             <Textarea placeholder="Observacion para este producto" value={notes} onChange={(event) => setNotes(event.target.value)} />
 
-            <div className="flex items-center justify-between gap-4 rounded-2xl bg-white p-3">
-              <div className="flex items-center gap-2">
+            <div className="grid gap-3 rounded-2xl bg-white p-3 sm:flex sm:items-center sm:justify-between sm:gap-4">
+              <div className="flex items-center justify-center gap-2 sm:justify-start">
                 <Button variant="outline" onClick={() => setQuantity((value) => Math.max(1, value - 1))} aria-label="Disminuir"><Minus size={16} /></Button>
                 <span className="min-w-8 text-center text-lg font-black">{quantity}</span>
                 <Button variant="outline" onClick={() => setQuantity((value) => value + 1)} aria-label="Aumentar"><Plus size={16} /></Button>
               </div>
-              <div className="text-right">
+              <div className="text-center sm:text-right">
                 <p className="text-xs font-semibold text-muted-foreground">Total</p>
                 <p className="text-2xl font-black text-primary">{formatGs(unitPrice * quantity)}</p>
               </div>
             </div>
 
             <Button
+              className="w-full"
               disabled={!product.is_available}
               onClick={() => {
                 addItem({

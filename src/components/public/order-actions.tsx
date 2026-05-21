@@ -47,12 +47,14 @@ export function OrderActions({ order, settings }: { order: PublicOrderDetails; s
   return (
     <div className="grid gap-3">
       <Button
+        className="w-full"
         onClick={() => window.open(buildWhatsAppUrl(settings.whatsapp_number, message), "_blank", "noopener,noreferrer")}
       >
         Mandar por WhatsApp
       </Button>
       {order.status === "Recibido" ? (
         <Button
+          className="w-full"
           variant="outline"
           disabled={!canCancel || isPending}
           onClick={() => {
